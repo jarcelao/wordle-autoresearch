@@ -69,16 +69,9 @@ class TestWordleEvaluator:
         evaluator = WordleEvaluator(
             train_words=["apple", "beach"],
             test_words=["crane"],
-            cache_dir=Path("temp/test_cache"),
         )
         assert evaluator.train_words == ["apple", "beach"]
         assert evaluator.test_words == ["crane"]
-        assert evaluator.cache_dir == Path("temp/test_cache")
-
-    def test_init_default_cache(self):
-        """Test default cache directory"""
-        evaluator = WordleEvaluator()
-        assert evaluator.cache_dir == Path("temp/cache")
 
     def test_evaluate_train_no_words(self):
         """Test evaluate_train raises error with no train words"""
@@ -144,16 +137,16 @@ class TestWordleEvaluator:
         assert result.wins == 2
         assert result.losses == 1
 
-    @patch("harness.Path.exists")
-    @patch("harness.open", new_callable=mock_open, read_data="word1\nword2\nword3\n")
-    def test_load_or_fetch_words_from_cache(self, mock_file, mock_exists):
-        """Test loading words from cache file"""
-        mock_exists.return_value = True
+    @patch("harness.fetch_wordle_word")
+    def test_fetch_words(self, mock_fetch):
+        """Test fetching words from API"""
+        mock_fetch.return_value = "crane"
 
-        evaluator = WordleEvaluator(cache_dir=Path("temp/test_cache"))
-        words = evaluator._load_or_fetch_words(3)
+        evaluator = WordleEvaluator()
+        words = evaluator._fetch_words(3)
 
-        assert words == ["word1", "word2", "word3"]
+        assert words == ["crane", "crane", "crane"]
+        assert mock_fetch.call_count == 3
 
 
 class TestMain:

@@ -89,43 +89,27 @@ class WordleEvaluator:
         self,
         train_words: Optional[List[str]] = None,
         test_words: Optional[List[str]] = None,
-        cache_dir: Optional[Path] = None,
     ):
         """
         Args:
             train_words: Fixed words for training/development evaluation.
             test_words: Fixed words for testing (or None to use API).
-            cache_dir: Directory to cache API words.
         """
         self.train_words = train_words or []
         self.test_words = test_words
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("temp/cache")
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self._api_cache: List[str] = []
 
-    def _load_or_fetch_words(self, count: int) -> List[str]:
-        """Load from cache or fetch from API."""
-        cache_file = self.cache_dir / "test_words.txt"
-
-        if cache_file.exists():
-            with open(cache_file) as f:
-                self._api_cache = [w.strip() for w in f if w.strip()]
-
-        needed = count - len(self._api_cache)
-        if needed > 0:
-            print(f"Fetching {needed} words from API...", file=sys.stderr)
-            for _ in range(needed):
-                try:
-                    word = fetch_wordle_word()
-                    self._api_cache.append(word)
-                except Exception as e:
-                    print(f"Failed to fetch word: {e}", file=sys.stderr)
-                    break
-            with open(cache_file, "w") as f:
-                for w in self._api_cache:
-                    f.write(f"{w}\n")
-
-        return self._api_cache[:count]
+    def _fetch_words(self, count: int) -> List[str]:
+        """Fetch words from API."""
+        words: List[str] = []
+        print(f"Fetching {count} words from API...", file=sys.stderr)
+        for _ in range(count):
+            try:
+                word = fetch_wordle_word()
+                words.append(word)
+            except Exception as e:
+                print(f"Failed to fetch word: {e}", file=sys.stderr)
+                break
+        return words
 
     def evaluate_train(self, agent: Agent) -> EvaluationResult:
         """Evaluate on training set (fixed words)."""
@@ -139,7 +123,7 @@ class WordleEvaluator:
         if self.test_words:
             words = self.test_words[:num_games]
         else:
-            words = self._load_or_fetch_words(num_games)
+            words = self._fetch_words(num_games)
 
         return self._run_evaluation(agent, words, mode="test")
 
@@ -244,9 +228,6 @@ def main():
         default="temp/train_words.txt",
         help="Word list file (for train mode)",
     )
-    parser.add_argument(
-        "--cache", default="temp/api_cache", help="Cache directory for API words"
-    )
     parser.add_argument("--output", "-o", required=True, help="Output JSON file")
 
     args = parser.parse_args()
@@ -289,9 +270,7 @@ def main():
         with open(args.word_list) as f:
             train_words = [w.strip() for w in f if w.strip()]
 
-    evaluator = WordleEvaluator(
-        train_words=train_words, test_words=test_words, cache_dir=Path(args.cache)
-    )
+    evaluator = WordleEvaluator(train_words=train_words, test_words=test_words)
 
     if args.mode == "train":
         result = evaluator.evaluate_train(agent)

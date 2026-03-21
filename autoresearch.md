@@ -17,16 +17,17 @@ Optimize the Wordle agent to achieve the lowest average number of attempts to wi
 - `agents/simple_agent.py` — Current best agent implementation (reference/starting point)
 - `agents/random_agent.py` — Random baseline agent
 - `harness.py` — Evaluation harness (can modify to add new agents to registry)
-- `temp/` — Cache directory for API words and results
 
 ## Off Limits
 - `wordle.py` — Core game logic, feedback system, and UI must not be modified
+- `valid-words.txt` — Complete list of 14,856 valid 5-letter words from the Wordle dictionary. Agents may use this for analysis (letter frequency, word filtering, etc.) but must NOT modify it.
 
 ## Constraints
 - **No new dependencies** — only use Python stdlib and existing packages (requests)
 - **Test mode for experiments** — actual benchmark runs must use `test` mode (API words)
 - **Train mode for validation** — can use `train` mode to quickly validate agent logic
 - **Agent registry** — new agents must be registered in `AGENT_REGISTRY` in `harness.py`
+- **Unit tests must pass** — all tests in `test/` must pass to prevent harness cheating
 
 ## What's Been Tried
 

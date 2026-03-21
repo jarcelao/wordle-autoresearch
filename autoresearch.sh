@@ -2,24 +2,19 @@
 set -euo pipefail
 
 # Wordle Agent Benchmark Script
-# Runs evaluation in test mode and outputs METRIC lines for autoresearch
+# Runs evaluation in test mode with FRESH random words from API each time
 
 # Configuration
 AGENT="simple"
 GAMES=50
-CACHE_DIR="temp/api_cache"
 OUTPUT_FILE="temp/result.json"
 
-# Ensure cache directory exists
-mkdir -p "$CACHE_DIR"
-
-# Run the harness in test mode
+# Run the harness in test mode (API words fetched fresh each time)
 # Suppress progress output, only capture metrics
 uv run python harness.py \
     --agent "$AGENT" \
     --mode test \
     --games "$GAMES" \
-    --cache "$CACHE_DIR" \
     --output "$OUTPUT_FILE" \
     2>/dev/null
 

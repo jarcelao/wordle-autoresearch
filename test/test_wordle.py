@@ -1,8 +1,7 @@
 """Unit tests for wordle.py"""
+
 import pytest
 from unittest.mock import patch, MagicMock
-import sys
-from io import StringIO
 
 from wordle import (
     fetch_wordle_word,
@@ -11,15 +10,13 @@ from wordle import (
     print_feedback,
     print_keyboard,
     play_wordle,
-    WORD_LENGTH,
-    MAX_ATTEMPTS,
 )
 
 
 class TestFetchWordleWord:
     """Tests for fetch_wordle_word function"""
 
-    @patch('wordle.requests.get')
+    @patch("wordle.requests.get")
     def test_fetch_wordle_word_success(self, mock_get):
         """Test successful API fetch"""
         mock_response = MagicMock()
@@ -31,8 +28,8 @@ class TestFetchWordleWord:
         assert result == "crane"
         mock_get.assert_called_once()
 
-    @patch('wordle.requests.get')
-    @patch('wordle.random.choice')
+    @patch("wordle.requests.get")
+    @patch("wordle.random.choice")
     def test_fetch_wordle_word_api_failure(self, mock_choice, mock_get):
         """Test fallback when API fails"""
         mock_get.side_effect = Exception("Connection error")
@@ -113,11 +110,14 @@ class TestIsValidGuess:
 class TestPrintFeedback:
     """Tests for print_feedback function"""
 
-    @pytest.mark.parametrize("feedback,expected_pieces", [
-        ([("a", "correct")], [" A "]),
-        ([("b", "present")], [" B "]),
-        ([("c", "absent")], [" C "]),
-    ])
+    @pytest.mark.parametrize(
+        "feedback,expected_pieces",
+        [
+            ([("a", "correct")], [" A "]),
+            ([("b", "present")], [" B "]),
+            ([("c", "absent")], [" C "]),
+        ],
+    )
     def test_outputs_contain_letters(self, feedback, expected_pieces, capsys):
         print_feedback(feedback)
         captured = capsys.readouterr()
@@ -142,27 +142,29 @@ class TestPrintKeyboard:
 class TestPlayWordle:
     """Tests for play_wordle function"""
 
-    @patch('wordle.input', side_effect=["crane"])
-    @patch('wordle.print_feedback')
-    @patch('wordle.print_keyboard')
+    @patch("wordle.input", side_effect=["crane"])
+    @patch("wordle.print_feedback")
+    @patch("wordle.print_keyboard")
     def test_win_on_first_guess(self, mock_keyboard, mock_feedback, mock_input, capsys):
         """Test winning immediately"""
         play_wordle("crane")
         captured = capsys.readouterr()
         assert "Congratulations" in captured.out or "WORD=CRANE" in captured.out
 
-    @patch('wordle.input', side_effect=["wrong", "crane"])
-    @patch('wordle.print_feedback')
-    @patch('wordle.print_keyboard')  
-    def test_win_on_second_guess(self, mock_keyboard, mock_feedback, mock_input, capsys):
+    @patch("wordle.input", side_effect=["wrong", "crane"])
+    @patch("wordle.print_feedback")
+    @patch("wordle.print_keyboard")
+    def test_win_on_second_guess(
+        self, mock_keyboard, mock_feedback, mock_input, capsys
+    ):
         """Test eventually winning"""
         play_wordle("crane")
         captured = capsys.readouterr()
         assert "Congratulations" in captured.out
 
-    @patch('wordle.input', side_effect=["aaaaa", "crane"])
-    @patch('wordle.print_feedback')
-    @patch('wordle.print_keyboard')
+    @patch("wordle.input", side_effect=["aaaaa", "crane"])
+    @patch("wordle.print_feedback")
+    @patch("wordle.print_keyboard")
     def test_invalid_then_valid(self, mock_keyboard, mock_feedback, mock_input, capsys):
         """Test handling invalid input then valid"""
         play_wordle("crane")
@@ -170,23 +172,25 @@ class TestPlayWordle:
         # Should have prompted for 5 letters
         assert "5 letters" in captured.out or "Congratulations" in captured.out
 
-    @patch('wordle.input', side_effect=["quit"])
+    @patch("wordle.input", side_effect=["quit"])
     def test_quit_game(self, mock_input, capsys):
         """Test quitting the game"""
         with pytest.raises(SystemExit) as exc_info:
             play_wordle("crane")
         assert exc_info.value.code == 0
 
-    @patch('wordle.input', side_effect=["guess"] * 6)
-    @patch('wordle.print_feedback')
-    @patch('wordle.print_keyboard')
-    def test_game_over_max_attempts(self, mock_keyboard, mock_feedback, mock_input, capsys):
+    @patch("wordle.input", side_effect=["guess"] * 6)
+    @patch("wordle.print_feedback")
+    @patch("wordle.print_keyboard")
+    def test_game_over_max_attempts(
+        self, mock_keyboard, mock_feedback, mock_input, capsys
+    ):
         """Test losing after max attempts"""
         play_wordle("crane")
         captured = capsys.readouterr()
         assert "Game Over" in captured.out or "word was" in captured.out.lower()
 
-    @patch('wordle.input', side_effect=EOFError())
+    @patch("wordle.input", side_effect=EOFError())
     def test_eof_error(self, mock_input, capsys):
         """Test handling EOFError (e.g., piped input)"""
         play_wordle("crane")

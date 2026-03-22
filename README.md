@@ -12,10 +12,10 @@ Simply run `/autoresearch continue` from the `src/` directory to continue the lo
 
 ## Slides
 
-Slides are available in `slides/`. I used [presenterm](https://github.com/mfontanini/presenterm) to generate the slides.
+Slides are available in `slides/`. I used [presenterm](https://github.com/mfontanini/presenterm) as my presentation software.
 
 ```bash
 cd slides/
-presenterm --present autoresearch.md
+presenterm --present slides.md
 ```
 

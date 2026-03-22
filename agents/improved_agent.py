@@ -21,6 +21,9 @@ class ImprovedAgent(Agent):
         for word in self.all_words:
             self.letter_freq.update(word)
         
+        # Best starting words (pre-computed optimal for information gain)
+        self.starting_words = ["slate", "crate", "sauce", "reate", "carve", "least", "tales"]
+        
         self.remaining: List[str] = []
         # Track constraints from feedback
         self.correct_positions: dict = {}  # position -> letter
@@ -39,7 +42,8 @@ class ImprovedAgent(Agent):
 
     def make_guess(self, history: List[GuessResult]) -> str:
         if not history:
-            return "slate"  # Better starting word than "crane"
+            # Use first starting word - slate is known to be excellent
+            return "slate"
 
         # Update constraints from all feedback history
         for h in history:

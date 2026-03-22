@@ -24,11 +24,13 @@ from wordle import (
 from agents.base import Agent, GuessResult
 from agents.random_agent import RandomAgent
 from agents.simple_agent import SimpleAgent
+from agents.improved_agent import ImprovedAgent
 
 # Agent registry - add custom agents here
 AGENT_REGISTRY = {
     "random": RandomAgent,
     "simple": SimpleAgent,
+    "improved": ImprovedAgent,
 }
 
 

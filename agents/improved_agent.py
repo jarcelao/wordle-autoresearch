@@ -8,7 +8,7 @@ from agents.base import Agent, GuessResult
 
 
 class ImprovedAgent(Agent):
-    """Improved agent that uses full dictionary, proper feedback handling, and letter frequency."""
+    """Improved agent that uses full dictionary, proper feedback handling, and optimized selection."""
 
     def __init__(self):
         # Load full valid word list (lowercase for Wordle compatibility)
@@ -22,16 +22,16 @@ class ImprovedAgent(Agent):
             self.letter_freq.update(word)
         
         self.remaining: List[str] = []
+        self.guessed_letters: Set[str] = set()  # Letters we've already guessed
         # Track constraints from feedback
-        self.correct_positions: dict = {}  # position -> letter
-        self.absent_letters: Set[str] = set()  # letters confirmed absent
-        # For each position, track letters that are known to be NOT there (present elsewhere)
+        self.correct_positions: dict = {}
+        self.absent_letters: Set[str] = set()
         self.forbidden_pos: Dict[int, Set[str]] = {}
-        # Track which letters are known to be in the word somewhere (present in wrong position)
-        self.present_letters: Set[str] = set()  # letters that are in word but not at known positions
+        self.present_letters: Set[str] = set()
 
     def reset(self) -> None:
         self.remaining = self.all_words.copy()
+        self.guessed_letters = set()
         self.correct_positions = {}
         self.absent_letters = set()
         self.forbidden_pos = {}
@@ -39,7 +39,12 @@ class ImprovedAgent(Agent):
 
     def make_guess(self, history: List[GuessResult]) -> str:
         if not history:
-            return "slate"  # Known good starting word
+            return "slate"
+
+        # Track all guessed letters
+        for h in history:
+            for letter, _ in h.feedback:
+                self.guessed_letters.add(letter.lower())
 
         # Update constraints from all feedback history
         for h in history:
@@ -51,11 +56,10 @@ class ImprovedAgent(Agent):
         if not self.remaining:
             self.remaining = self.all_words.copy()
 
-        # Return the best word based on letter frequency
         return self._select_best_word()
 
     def _select_best_word(self) -> str:
-        """Select the word with the highest letter frequency score."""
+        """Select word balancing letter frequency and new letter exploration."""
         if not self.remaining:
             return "slate"
         
@@ -63,20 +67,24 @@ class ImprovedAgent(Agent):
         best_score = -1
         
         for word in self.remaining:
-            score = self._word_freq_score(word)
+            score = self._word_score(word)
             if score > best_score:
                 best_score = score
                 best_word = word
         
         return best_word if best_word else self.remaining[0]
 
-    def _word_freq_score(self, word: str) -> int:
-        """Calculate letter frequency score for a word."""
+    def _word_score(self, word: str) -> int:
+        """Score word by letter frequency + new letter bonus."""
         score = 0
         seen = set()
         for letter in word:
             if letter not in seen:
-                score += self.letter_freq.get(letter, 0)
+                # Base score from letter frequency
+                base = self.letter_freq.get(letter, 0)
+                # Bonus for letters we haven't guessed yet
+                bonus = 50 if letter not in self.guessed_letters and letter not in self.present_letters else 0
+                score += base + bonus
                 seen.add(letter)
         return score
 
@@ -85,7 +93,6 @@ class ImprovedAgent(Agent):
         guess = last.guess.lower()
         feedback = last.feedback
         
-        # Track letter statuses for handling duplicates
         letter_statuses: Dict[str, List[str]] = {}
         for letter, status in feedback:
             letter = letter.lower()
@@ -93,7 +100,6 @@ class ImprovedAgent(Agent):
                 letter_statuses[letter] = []
             letter_statuses[letter].append(status)
 
-        # Process each position
         for i, (letter, status) in enumerate(feedback):
             letter = letter.lower()
             if status == "correct":

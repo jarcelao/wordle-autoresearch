@@ -1,0 +1,1 @@
+{"type":"config","name":"Wordle Agent Optimization","metricName":"avg_attempts_on_win","metricUnit":"attempts","bestDirection":"lower"}

@@ -1,6 +1,6 @@
 ---
-title: "Self-Optimizing Programs with Autoreseach"
-sub_title: "or, training your own Wordle solver"
+title: "Self-Optimizing Programs with Autoresearch"
+sub_title: "or, how to train your Wordle solver"
 author: "Jericho Arcelao"
 theme: 
     name: "catppuccin-macchiato"
@@ -22,7 +22,7 @@ Common Wordle Algorithms
 
 <!-- jump_to_middle -->
 
-Can we do even better?
+Can we get much higher?
 ===
 
 <!-- end_slide -->
@@ -84,7 +84,7 @@ The end solution uses a greedy entropy-style approach: after each guess, it filt
 
 <!-- end_slide -->
 
-Learnings
+In conclusion...
 ===
 
 ## Is it the world's best Wordle solver?
@@ -93,7 +93,7 @@ Maybe not.
 
 ## How much did it cost?
 
-~1 USD to run the loop for 10 experiments (~30 mins), using `minimax-m2.5`
+~1 USD to run the loop for 11 experiments (~30 mins), using `minimax-m2.5`
 
 ## Isn't this just deep learning with extra steps?
 

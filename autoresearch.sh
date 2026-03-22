@@ -5,7 +5,7 @@ set -euo pipefail
 # Runs evaluation in test mode with FRESH random words from API each time
 
 # Configuration
-AGENT="simple"
+AGENT="improved"
 GAMES=50
 OUTPUT_FILE="temp/result.json"
 

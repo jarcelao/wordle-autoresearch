@@ -116,3 +116,5 @@ Thanks for listening!
 
 <!-- alignment: center -->
 github.com/jarcelao/wordle-autoresearch
+
+![image](imgs/qr.png)

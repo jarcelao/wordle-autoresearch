@@ -115,4 +115,4 @@ Thanks for listening!
 ===
 
 <!-- alignment: center -->
-github.com/jarcelao
+github.com/jarcelao/wordle-autoresearch

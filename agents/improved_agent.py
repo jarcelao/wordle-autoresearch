@@ -27,15 +27,15 @@ class ImprovedAgent(Agent):
         self.absent_letters: Set[str] = set()  # letters confirmed absent
         # For each position, track letters that are known to be NOT there (present elsewhere)
         self.forbidden_pos: Dict[int, Set[str]] = {}
-        # Track which letters are required to be in the word (present but wrong position)
-        self.present_letters: Dict[str, int] = {}  # letter -> minimum count needed
+        # Track which letters are known to be in the word somewhere (present in wrong position)
+        self.present_letters: Set[str] = set()  # letters that are in word but not at known positions
 
     def reset(self) -> None:
         self.remaining = self.all_words.copy()
         self.correct_positions = {}
         self.absent_letters = set()
         self.forbidden_pos = {}
-        self.present_letters = {}
+        self.present_letters = set()
 
     def make_guess(self, history: List[GuessResult]) -> str:
         if not history:
@@ -107,10 +107,12 @@ class ImprovedAgent(Agent):
                         self.forbidden_pos[i] = set()
                     self.forbidden_pos[i].add(letter)
             elif status == "present":
+                # Letter must be in word somewhere (just mark as present)
+                self.present_letters.add(letter)
+                # Also mark this position as forbidden for this letter
                 if i not in self.forbidden_pos:
                     self.forbidden_pos[i] = set()
                 self.forbidden_pos[i].add(letter)
-                self.present_letters[letter] = self.present_letters.get(letter, 0) + 1
 
     def _filter_remaining(self) -> None:
         """Filter remaining words based on current constraints."""
@@ -127,7 +129,7 @@ class ImprovedAgent(Agent):
             if word[pos] != letter:
                 return False
 
-        # Check forbidden positions
+        # Check forbidden positions (present but not at this position)
         for pos, letters in self.forbidden_pos.items():
             if word[pos] in letters:
                 return False
@@ -137,9 +139,9 @@ class ImprovedAgent(Agent):
             if letter in word:
                 return False
 
-        # Check required present letters
-        for letter, min_count in self.present_letters.items():
-            if word.count(letter) < min_count:
+        # Check required present letters - just verify each is in word at least once
+        for letter in self.present_letters:
+            if letter not in word:
                 return False
 
         return True

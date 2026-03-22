@@ -21,9 +21,6 @@ class ImprovedAgent(Agent):
         for word in self.all_words:
             self.letter_freq.update(word)
         
-        # Best starting words (pre-computed optimal for information gain)
-        self.starting_words = ["slate", "crate", "sauce", "reate", "carve", "least", "tales"]
-        
         self.remaining: List[str] = []
         # Track constraints from feedback
         self.correct_positions: dict = {}  # position -> letter
@@ -42,8 +39,7 @@ class ImprovedAgent(Agent):
 
     def make_guess(self, history: List[GuessResult]) -> str:
         if not history:
-            # Use first starting word - slate is known to be excellent
-            return "slate"
+            return "slate"  # Known good starting word
 
         # Update constraints from all feedback history
         for h in history:
@@ -63,22 +59,26 @@ class ImprovedAgent(Agent):
         if not self.remaining:
             return "slate"
         
-        # Score each word by letter frequency (prioritize common letters)
         best_word = None
         best_score = -1
         
         for word in self.remaining:
-            score = 0
-            seen = set()
-            for letter in word:
-                if letter not in seen:
-                    score += self.letter_freq.get(letter, 0)
-                    seen.add(letter)
+            score = self._word_freq_score(word)
             if score > best_score:
                 best_score = score
                 best_word = word
         
         return best_word if best_word else self.remaining[0]
+
+    def _word_freq_score(self, word: str) -> int:
+        """Calculate letter frequency score for a word."""
+        score = 0
+        seen = set()
+        for letter in word:
+            if letter not in seen:
+                score += self.letter_freq.get(letter, 0)
+                seen.add(letter)
+        return score
 
     def _update_constraints(self, last: GuessResult) -> None:
         """Update constraints based on feedback."""
@@ -99,7 +99,6 @@ class ImprovedAgent(Agent):
             if status == "correct":
                 self.correct_positions[i] = letter
             elif status == "absent":
-                # Check if this SAME letter appears as correct or present elsewhere
                 other_statuses = letter_statuses.get(letter, [])
                 has_present = "present" in other_statuses
                 has_correct = "correct" in other_statuses
@@ -111,9 +110,7 @@ class ImprovedAgent(Agent):
                         self.forbidden_pos[i] = set()
                     self.forbidden_pos[i].add(letter)
             elif status == "present":
-                # Letter must be in word somewhere (just mark as present)
                 self.present_letters.add(letter)
-                # Also mark this position as forbidden for this letter
                 if i not in self.forbidden_pos:
                     self.forbidden_pos[i] = set()
                 self.forbidden_pos[i].add(letter)
@@ -128,22 +125,18 @@ class ImprovedAgent(Agent):
 
     def _word_matches_constraints(self, word: str) -> bool:
         """Check if word matches all constraints."""
-        # Check correct positions first
         for pos, letter in self.correct_positions.items():
             if word[pos] != letter:
                 return False
 
-        # Check forbidden positions (present but not at this position)
         for pos, letters in self.forbidden_pos.items():
             if word[pos] in letters:
                 return False
 
-        # Check absent letters
         for letter in self.absent_letters:
             if letter in word:
                 return False
 
-        # Check required present letters - just verify each is in word at least once
         for letter in self.present_letters:
             if letter not in word:
                 return False
